@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsurAI Analyzer - Embeddable Insurance Policy Analysis Widget</title>
+    <meta name="description" content="Drop-in web component for analyzing insurance policies with AI">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+            padding: 2rem 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .page-header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .widget-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: #64748b;
+        }
+
+        .demo-section {
+            margin-bottom: 3rem;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .doc-card {
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .doc-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #4f46e5;
+        }
+
+        .doc-card pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .doc-card code {
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+            color: #475569;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            color: white;
+            margin-top: 3rem;
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 2rem;
+            background: white;
+            color: #4f46e5;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: white;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-header">
+    <h1>🛡️ InsurAI Analyzer</h1>
+    <p>Embeddable AI-powered insurance policy analysis widget for your website</p>
+    <div class="badges">
+        <span class="badge">⚡ Analyzes in <2s</span>
+        <span class="badge">🎨 Customizable</span>
+        <span class="badge">📱 Mobile Ready</span>
+        <span class="badge">🔒 Secure</span>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Live Demo -->
+    <div class="widget-section demo-section">
+        <div class="section-header">
+            <h2>🎯 Live Demo</h2>
+            <p>Try it now - paste policy text or load a sample</p>
+        </div>
+
+        <insurai-analyzer
+                api-url="https://your-api-endpoint.com"
+                theme="light"
+                default-type="health"
+                default-jurisdiction="US"
+        ></insurai-analyzer>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="widget-section">
+        <div class="section-header">
+            <h2>🚀 Quick Start</h2>
+            <p>Add to your website in 30 seconds</p>
+        </div>
+
+        <div class="docs-grid">
+            <div class="doc-card">
+                <h3>1. Include Script</h3>
+                <pre><code>&lt;script type="module" src="https://cdn.jsdelivr.net/gh/RichardTrujilloTorres/insurai-widget@main/dist/insurai-analyzer.js"&gt;&lt;/script&gt;</code></pre>
+            </div>
+
+            <div class="doc-card">
+                <h3>2. Add Component</h3>
+                <pre><code>&lt;insurai-analyzer
+  api-url="YOUR_API_URL"
+&gt;&lt;/insurai-analyzer&gt;</code></pre>
+            </div>
+
+            <div class="doc-card">
+                <h3>3. Customize (Optional)</h3>
+                <pre><code>&lt;insurai-analyzer
+  api-url="YOUR_API_URL"
+  theme="dark"
+  default-type="health"
+&gt;&lt;/insurai-analyzer&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="widget-section">
+        <div class="section-header">
+            <h2>✨ Features</h2>
+            <p>Everything you need for insurance policy analysis</p>
+        </div>
+
+        <div class="docs-grid">
+            <div class="doc-card">
+                <h3>Core Features</h3>
+                <ul class="feature-list">
+                    <li>AI-powered analysis via OpenAI</li>
+                    <li>Extracts coverage, deductibles, exclusions</li>
+                    <li>Risk level assessment</li>
+                    <li>Legal review flags</li>
+                    <li>Recommended actions</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h3>Developer Features</h3>
+                <ul class="feature-list">
+                    <li>Zero dependencies (except Lit)</li>
+                    <li>Light/dark theme support</li>
+                    <li>Custom events for integration</li>
+                    <li>Fully typed with JSDoc</li>
+                    <li>Mobile responsive</li>
+                </ul>
+            </div>
+
+            <div class="doc-card">
+                <h3>Production Ready</h3>
+                <ul class="feature-list">
+                    <li>Error handling built-in</li>
+                    <li>Loading states</li>
+                    <li>CORS-ready API calls</li>
+                    <li>Accessible (ARIA)</li>
+                    <li>< 50KB bundle size</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration -->
+    <div class="widget-section">
+        <div class="section-header">
+            <h2>⚙️ Configuration</h2>
+            <p>Available attributes and options</p>
+        </div>
+
+        <div class="doc-card">
+            <h3>Attributes</h3>
+            <pre><code>&lt;insurai-analyzer
+  api-url="string"              <!-- Required: Your API endpoint -->
+  theme="light|dark"            <!-- Optional: Theme (default: light) -->
+  default-type="health|auto|..."  <!-- Optional: Default policy type -->
+  default-jurisdiction="US|CA|..." <!-- Optional: Default jurisdiction -->
+&gt;&lt;/insurai-analyzer&gt;</code></pre>
+        </div>
+
+        <div class="doc-card">
+            <h3>Events</h3>
+            <pre><code>// Listen for completion
+element.addEventListener('analysis-complete', (e) => {
+  console.log('Result:', e.detail);
+});
+
+// Listen for errors
+element.addEventListener('analysis-error', (e) => {
+  console.log('Error:', e.detail.error);
+});</code></pre>
+        </div>
+
+        <div class="doc-card">
+            <h3>Programmatic API</h3>
+            <pre><code>const analyzer = document.querySelector('insurai-analyzer');
+
+// Set policy text
+analyzer.policyText = "Your policy...";
+
+// Trigger analysis
+await analyzer.analyze();
+
+// Access result
+console.log(analyzer.result);</code></pre>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-section">
+        <h2>Ready to add to your site?</h2>
+        <p>Join the developers using InsurAI to power their insurance apps</p>
+        <div class="cta-buttons">
+            <a href="https://github.com/RichardTrujilloTorres/insurai-widget" class="btn">
+                📦 View on GitHub
+            </a>
+            <a href="https://github.com/RichardTrujilloTorres/insurai-policy-analyzer" class="btn btn-secondary">
+                🔗 API Documentation
+            </a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>
+        Built with ❤️ by <a href="https://github.com/RichardTrujilloTorres" target="_blank">Richard Trujillo Torres</a>
+        | Powered by <a href="https://github.com/RichardTrujilloTorres/insurai-policy-analyzer" target="_blank">InsurAI API</a>
+    </p>
+</footer>
+
+<script type="module" src="/src/insurai-analyzer.js"></script>
+</body>
+</html>
