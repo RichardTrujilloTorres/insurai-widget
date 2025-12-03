@@ -243,8 +243,53 @@
             <p>Try it now - paste policy text or load a sample</p>
         </div>
 
+        <!-- Password input for recruiters -->
+        <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: #f8fafc; border-radius: 12px; border: 2px solid #e2e8f0;">
+            <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #1e293b; font-size: 0.95rem;">
+                🔑 Have a demo password? (From CV/LinkedIn/Resume)
+            </label>
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <input
+                        type="password"
+                        id="demo-password-input"
+                        placeholder="Enter password for real API access"
+                        style="
+              flex: 1;
+              padding: 0.875rem;
+              border: 2px solid #e2e8f0;
+              border-radius: 8px;
+              font-size: 0.875rem;
+              font-family: inherit;
+            "
+                >
+                <button
+                        onclick="enableRealMode()"
+                        style="
+              padding: 0.875rem 2rem;
+              background: #4f46e5;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-weight: 600;
+              cursor: pointer;
+              font-size: 0.875rem;
+              transition: background-color 0.2s;
+            "
+                        onmouseover="this.style.background='#4338ca'"
+                        onmouseout="this.style.background='#4f46e5'"
+                >
+                    🚀 Unlock Real API
+                </button>
+            </div>
+            <small style="color: #64748b; display: block; font-size: 0.8rem; line-height: 1.4;">
+                💡 <strong>Don't have a password?</strong> No problem! The demo mode below uses unlimited simulated responses.
+                Password holders get 5 real OpenAI-powered analyses per day.
+            </small>
+        </div>
+
         <insurai-analyzer
-                api-url="https://your-api-endpoint.com"
+                id="demo-widget"
+                api-url="https://pq50r56020.execute-api.eu-north-1.amazonaws.com"
                 theme="light"
                 default-type="health"
                 default-jurisdiction="US"
@@ -335,11 +380,16 @@
         <div class="doc-card">
             <h3>Attributes</h3>
             <pre><code>&lt;insurai-analyzer
-  api-url="string"              <!-- Required: Your API endpoint -->
-  theme="light|dark"            <!-- Optional: Theme (default: light) -->
-  default-type="health|auto|..."  <!-- Optional: Default policy type -->
-  default-jurisdiction="US|CA|..." <!-- Optional: Default jurisdiction -->
+  api-url="string"                     <!-- Required: Your API endpoint -->
+  theme="light|dark"                   <!-- Optional: Theme (default: light) -->
+  default-type="health|auto|..."       <!-- Optional: Default policy type -->
+  default-jurisdiction="US|CA|..."     <!-- Optional: Default jurisdiction -->
+  demo-password="string"               <!-- Optional: Password for real API access -->
 &gt;&lt;/insurai-analyzer&gt;</code></pre>
+            <p style="margin-top: 1rem; color: #64748b; font-size: 0.875rem;">
+                <strong>💡 Demo Mode:</strong> Without <code>demo-password</code>, the widget uses simulated responses (free, unlimited).
+                With a valid password, it uses the real API (5 calls/day per user).
+            </p>
         </div>
 
         <div class="doc-card">
@@ -391,6 +441,44 @@ console.log(analyzer.result);</code></pre>
         | Powered by <a href="https://github.com/RichardTrujilloTorres/insurai-policy-analyzer" target="_blank">InsurAI API</a>
     </p>
 </footer>
+
+<script>
+    function enableRealMode() {
+        const input = document.getElementById('demo-password-input');
+        const password = input.value.trim();
+
+        if (!password) {
+            alert('❌ Please enter a password');
+            return;
+        }
+
+        const widget = document.getElementById('demo-widget');
+
+        // Set the password attribute
+        widget.setAttribute('demo-password', password);
+
+        // Force widget to re-initialize with password
+        widget.demoPassword = password;
+        widget.demoMode = false;
+        widget.demoCallsRemaining = widget.getRemainingDemoCalls();
+        widget.requestUpdate();
+
+        // Clear input for security
+        input.value = '';
+
+        // Show success message
+        alert('✅ Real API mode enabled!\n\n' +
+            'You have ' + widget.demoCallsRemaining + ' calls remaining today.\n' +
+            'Analyses will now use real OpenAI processing.');
+    }
+
+    // Allow Enter key to submit password
+    document.getElementById('demo-password-input')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            enableRealMode();
+        }
+    });
+</script>
 
 <script type="module" src="/src/insurai-analyzer.js"></script>
 </body>

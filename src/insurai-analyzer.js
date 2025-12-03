@@ -10,15 +10,19 @@ import { LitElement, html, css } from 'lit';
  * @attr {string} theme - Theme: 'light' or 'dark' (default: 'light')
  * @attr {string} default-type - Default policy type
  * @attr {string} default-jurisdiction - Default jurisdiction
+ * @attr {string} demo-password - Password for real API access (recruiter access)
  *
  * @fires analysis-complete - Fired when analysis completes successfully
  * @fires analysis-error - Fired when analysis fails
  *
  * @example
+ * <!-- Demo mode (fake responses, unlimited) -->
+ * <insurai-analyzer api-url="https://your-api.com"></insurai-analyzer>
+ *
+ * <!-- Real API mode (with password, 5 calls/day) -->
  * <insurai-analyzer
  *   api-url="https://your-api.com"
- *   theme="light"
- *   default-type="health"
+ *   demo-password="recruiter2024"
  * ></insurai-analyzer>
  */
 export class InsurAIAnalyzer extends LitElement {
@@ -28,6 +32,7 @@ export class InsurAIAnalyzer extends LitElement {
         theme: { type: String },
         defaultType: { type: String, attribute: 'default-type' },
         defaultJurisdiction: { type: String, attribute: 'default-jurisdiction' },
+        demoPassword: { type: String, attribute: 'demo-password' },
 
         // Internal state
         policyText: { state: true },
@@ -35,7 +40,9 @@ export class InsurAIAnalyzer extends LitElement {
         jurisdiction: { state: true },
         loading: { state: true },
         result: { state: true },
-        error: { state: true }
+        error: { state: true },
+        demoMode: { state: true },
+        demoCallsRemaining: { state: true }
     };
 
     static styles = css`
@@ -96,6 +103,33 @@ export class InsurAIAnalyzer extends LitElement {
       margin: 0;
       color: var(--text-secondary);
       font-size: 0.875rem;
+    }
+
+    .mode-indicator {
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
+    .mode-indicator.demo {
+      background: #dbeafe;
+      border: 1px solid #3b82f6;
+      color: #1e40af;
+    }
+
+    .mode-indicator.real {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .mode-indicator small {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      opacity: 0.8;
     }
 
     .input-section {
@@ -347,6 +381,7 @@ export class InsurAIAnalyzer extends LitElement {
       color: #991b1b;
       border-radius: 8px;
       border-left: 4px solid var(--error-color);
+      white-space: pre-line;
     }
 
     .error-title {
@@ -377,10 +412,11 @@ export class InsurAIAnalyzer extends LitElement {
     constructor() {
         super();
         // Default values
-        this.apiUrl = 'http://127.0.0.1:8000'; // TODO: Replace with actual API
+        this.apiUrl = 'http://127.0.0.1:8000';
         this.theme = 'light';
         this.defaultType = 'health';
         this.defaultJurisdiction = 'US';
+        this.demoPassword = null;
 
         // Initialize state
         this.policyText = '';
@@ -389,6 +425,10 @@ export class InsurAIAnalyzer extends LitElement {
         this.loading = false;
         this.result = null;
         this.error = null;
+
+        // Demo mode setup
+        this.demoMode = !this.demoPassword; // Default to demo if no password
+        this.demoCallsRemaining = this.getRemainingDemoCalls();
     }
 
     connectedCallback() {
@@ -397,6 +437,71 @@ export class InsurAIAnalyzer extends LitElement {
         if (this.theme) {
             this.setAttribute('theme', this.theme);
         }
+
+        // Check if password was provided
+        if (this.demoPassword) {
+            this.demoMode = false;
+        }
+    }
+
+    getRemainingDemoCalls() {
+        const today = new Date().toISOString().split('T')[0];
+        const storedDate = localStorage.getItem('insurai_demo_date');
+        const storedCount = parseInt(localStorage.getItem('insurai_demo_calls') || '0');
+
+        // Reset if new day
+        if (storedDate !== today) {
+            localStorage.setItem('insurai_demo_date', today);
+            localStorage.setItem('insurai_demo_calls', '0');
+            return 5;
+        }
+
+        return Math.max(0, 5 - storedCount);
+    }
+
+    incrementDemoCallCount() {
+        const count = parseInt(localStorage.getItem('insurai_demo_calls') || '0');
+        localStorage.setItem('insurai_demo_calls', (count + 1).toString());
+        this.demoCallsRemaining = this.getRemainingDemoCalls();
+    }
+
+    getFakeResponse() {
+        // Simulate API delay for realism
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve({
+                    coverage: {
+                        coverageType: this.policyType === 'health' ? 'comprehensive' : 'standard',
+                        coverageAmount: this.policyType === 'health' ? '$100,000' : '$50,000',
+                        coverageBreakdown: {
+                            medical: this.policyType === 'health',
+                            dental: false,
+                            vision: false,
+                            pharmacy: this.policyType === 'health',
+                        }
+                    },
+                    deductibles: [
+                        { type: 'annual', amount: '$1,000' },
+                        { type: 'per-incident', amount: '$50' }
+                    ],
+                    exclusions: [
+                        'Pre-existing conditions (first 6 months)',
+                        'Cosmetic procedures',
+                        'Experimental treatments'
+                    ],
+                    riskLevel: 'medium',
+                    requiredActions: [
+                        'Review exclusions carefully',
+                        'Verify network providers',
+                        'Understand deductible terms'
+                    ],
+                    flags: {
+                        needsLegalReview: false,
+                        inconsistentClausesDetected: false
+                    }
+                });
+            }, 1500); // 1.5 second delay to feel real
+        });
     }
 
     async analyze() {
@@ -411,10 +516,36 @@ export class InsurAIAnalyzer extends LitElement {
         this.result = null;
 
         try {
+            // DEMO MODE - Use fake responses
+            if (this.demoMode) {
+                this.result = await this.getFakeResponse();
+
+                // Dispatch success event
+                this.dispatchEvent(new CustomEvent('analysis-complete', {
+                    detail: { ...this.result, isDemo: true },
+                    bubbles: true,
+                    composed: true
+                }));
+
+                return;
+            }
+
+            // REAL API MODE - Check rate limit
+            if (this.demoCallsRemaining <= 0) {
+                this.error = `⏱️ Daily demo limit reached (5 calls/day).
+
+Want unlimited access? Contact me:
+📧 richard@example.com
+💼 LinkedIn: linkedin.com/in/richardtrujillo`;
+                return;
+            }
+
+            // Make real API call
             const response = await fetch(`${this.apiUrl}/analyze`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Demo-Password': this.demoPassword || '',
                 },
                 body: JSON.stringify({
                     policyText: this.policyText,
@@ -430,9 +561,12 @@ export class InsurAIAnalyzer extends LitElement {
 
             this.result = await response.json();
 
+            // Increment call count
+            this.incrementDemoCallCount();
+
             // Dispatch success event
             this.dispatchEvent(new CustomEvent('analysis-complete', {
-                detail: this.result,
+                detail: { ...this.result, isDemo: false },
                 bubbles: true,
                 composed: true
             }));
@@ -483,6 +617,18 @@ Terms:
           <h2>🛡️ InsurAI Policy Analyzer</h2>
           <p>Analyze insurance policies with AI in seconds</p>
         </div>
+
+        ${!this.demoMode ? html`
+          <div class="mode-indicator real">
+            🔑 <strong>Real API Mode</strong> • ${this.demoCallsRemaining} demo calls remaining today
+            <small>Using live OpenAI analysis</small>
+          </div>
+        ` : html`
+          <div class="mode-indicator demo">
+            💡 <strong>Demo Mode</strong> - Using simulated responses (instant, unlimited)
+            <small>Have a password? Add demo-password="..." attribute to use real API</small>
+          </div>
+        `}
 
         <div class="input-section">
           <label for="policy-text">Policy Text</label>
