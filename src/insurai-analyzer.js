@@ -658,17 +658,17 @@ Terms:
 
           <div class="input-section">
             <label for="jurisdiction">Jurisdiction</label>
-            <select
-              id="jurisdiction"
-              .value=${this.jurisdiction}
-              @change=${(e) => this.jurisdiction = e.target.value}
-            >
-              <option value="US">United States</option>
-              <option value="CA">Canada</option>
-              <option value="UK">United Kingdom</option>
-              <option value="EU">European Union</option>
-              <option value="AU">Australia</option>
-            </select>
+              <select
+                      id="jurisdiction"
+                      .value=${this.jurisdiction}
+                      @change=${(e) => this.jurisdiction = e.target.value}
+              >
+                  <option value="US">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="EU">European Union</option>
+                  <option value="IT">Italy</option>
+                  <option value="GLOBAL">Global</option>
+              </select>
           </div>
         </div>
 
