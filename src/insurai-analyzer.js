@@ -556,7 +556,35 @@ Want unlimited access? Contact me:
             });
 
             if (!response.ok) {
-                throw new Error(`Analysis failed: ${response.statusText}`);
+                // Try to parse error response from backend
+                let errorMessage = `Analysis failed: ${response.statusText}`;
+
+                try {
+                    const errorData = await response.json();
+
+                    // Handle 401 password validation errors
+                    if (response.status === 401 && errorData.error) {
+                        if (errorData.error === 'Demo password required') {
+                            errorMessage = `🔐 Password Required\n\n${errorData.message || 'This API requires a demo password.'}`;
+                        } else if (errorData.error === 'Invalid demo password') {
+                            errorMessage = `❌ Invalid Password\n\n${errorData.message || 'The password you provided is incorrect.'}`;
+                        }
+
+                        // Add contact info if available
+                        if (errorData.contact) {
+                            errorMessage += '\n\n📧 Contact: ' + (errorData.contact.email || '');
+                            if (errorData.contact.linkedin) {
+                                errorMessage += '\n💼 LinkedIn: ' + errorData.contact.linkedin;
+                            }
+                        }
+                    } else if (errorData.message) {
+                        errorMessage = errorData.message;
+                    }
+                } catch (parseError) {
+                    // If we can't parse the error, use the default message
+                }
+
+                throw new Error(errorMessage);
             }
 
             this.result = await response.json();
@@ -620,13 +648,13 @@ Terms:
 
         ${!this.demoMode ? html`
           <div class="mode-indicator real">
-            🔑 <strong>Real API Mode</strong> • ${this.demoCallsRemaining} demo calls remaining today
-            <small>Using live OpenAI analysis</small>
+            🔑 <strong>Real API Mode</strong> • ${this.demoCallsRemaining} calls remaining today
+            <small>Using live OpenAI analysis (password validated)</small>
           </div>
         ` : html`
           <div class="mode-indicator demo">
             💡 <strong>Demo Mode</strong> - Using simulated responses (instant, unlimited)
-            <small>Have a password? Add demo-password="..." attribute to use real API</small>
+            <small>⚠️ Backend requires password - Real API calls will fail without valid password</small>
           </div>
         `}
 
@@ -658,17 +686,17 @@ Terms:
 
           <div class="input-section">
             <label for="jurisdiction">Jurisdiction</label>
-              <select
-                      id="jurisdiction"
-                      .value=${this.jurisdiction}
-                      @change=${(e) => this.jurisdiction = e.target.value}
-              >
-                  <option value="US">United States</option>
-                  <option value="UK">United Kingdom</option>
-                  <option value="EU">European Union</option>
-                  <option value="IT">Italy</option>
-                  <option value="GLOBAL">Global</option>
-              </select>
+            <select
+              id="jurisdiction"
+              .value=${this.jurisdiction}
+              @change=${(e) => this.jurisdiction = e.target.value}
+            >
+              <option value="US">United States</option>
+              <option value="UK">United Kingdom</option>
+              <option value="EU">European Union</option>
+              <option value="IT">Italy</option>
+              <option value="GLOBAL">Global</option>
+            </select>
           </div>
         </div>
 
