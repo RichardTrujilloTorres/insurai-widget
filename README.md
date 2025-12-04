@@ -8,7 +8,7 @@
 [![Built with Lit](https://img.shields.io/badge/built%20with-Lit-blue.svg)](https://lit.dev/)
 [![npm version](https://img.shields.io/badge/npm-1.0.0-green.svg)](https://www.npmjs.com/)
 
-[Live Demo](#) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
+[Live Demo](https://richardtrujillotorres.github.io/insurai-widget/) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
 
 </div>
 
@@ -32,9 +32,11 @@ A production-ready **web component** that lets you embed AI-powered insurance po
 ### Core Capabilities
 - ⚡ **< 2 second analysis** - Fast AI-powered parsing
 - 📋 **Comprehensive extraction** - Coverage, deductibles, exclusions, risks
+- 🔐 **Password protection** - Secure API access with rate limiting
+- 💡 **Demo mode** - Unlimited simulated responses for testing
 - 🎨 **Themeable** - Light/dark mode built-in
 - 📱 **Mobile responsive** - Works on all devices
-- 🔒 **Secure** - CORS-ready, no data stored
+- 🔒 **Secure** - CORS-ready, password-validated backend
 
 ### Developer Experience
 - 🚀 **Zero config** - Drop in and it works
@@ -51,7 +53,7 @@ A production-ready **web component** that lets you embed AI-powered insurance po
 
 **Option 1: CDN (Recommended)**
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/YOUR-USERNAME/insurai-widget@main/dist/insurai-analyzer.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/RichardTrujilloTorres/insurai-widget@main/dist/insurai-analyzer.js"></script>
 ```
 
 **Option 2: NPM**
@@ -61,15 +63,16 @@ npm install insurai-widget
 
 ### Usage
 
-**Minimal example:**
+**Minimal example (demo mode):**
 ```html
 <insurai-analyzer api-url="https://your-api.com"></insurai-analyzer>
 ```
 
-**Configured example:**
+**With password (real API access):**
 ```html
 <insurai-analyzer 
   api-url="https://your-api.com"
+  demo-password="your-password-here"
   theme="dark"
   default-type="health"
   default-jurisdiction="US"
@@ -77,6 +80,8 @@ npm install insurai-widget
 ```
 
 **That's it!** 🎉
+
+> **Note:** The `demo-password` attribute is required for real API access. Without it, the widget operates in demo mode with simulated responses.
 
 ---
 
@@ -87,9 +92,43 @@ npm install insurai-widget
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `api-url` | string | *required* | Your InsurAI API endpoint |
+| `demo-password` | string | `null` | Password for real API access (required by backend) |
 | `theme` | `"light"` \| `"dark"` | `"light"` | Color theme |
 | `default-type` | string | `"health"` | Default policy type |
 | `default-jurisdiction` | string | `"US"` | Default jurisdiction |
+
+### Demo Mode vs Real API Mode
+
+The widget operates in two modes:
+
+**Demo Mode (default, no password):**
+- ⚡ Instant responses using simulated data
+- 🆓 Unlimited calls, no rate limits
+- 💡 Perfect for testing and demonstrations
+- ⚠️ Note: Backend requires password - real API calls will fail
+
+**Real API Mode (with password):**
+- 🔐 Authenticated access to live OpenAI analysis
+- 📊 Real policy analysis results
+- 🔒 Rate limited to 5 calls per day per user
+- ✅ Password validated by backend
+
+```html
+<!-- Demo mode (simulated responses) -->
+<insurai-analyzer api-url="https://your-api.com"></insurai-analyzer>
+
+<!-- Real API mode (live analysis, password required) -->
+<insurai-analyzer 
+  api-url="https://your-api.com"
+  demo-password="your-password-here"
+></insurai-analyzer>
+```
+
+**Password Validation:**
+- Backend validates all real API requests
+- Invalid password → Error with contact information
+- Missing password in real mode → Error message
+- Demo mode works without password (simulated data only)
 
 ### Events
 
@@ -106,6 +145,7 @@ analyzer.addEventListener('analysis-complete', (event) => {
   //   deductibles: [...],
   //   exclusions: [...],
   //   riskLevel: "medium",
+  //   isDemo: false  // true if demo mode
   //   ...
   // }
 });
@@ -113,8 +153,38 @@ analyzer.addEventListener('analysis-complete', (event) => {
 // Analysis failed
 analyzer.addEventListener('analysis-error', (event) => {
   console.error('Error:', event.detail.error);
+  // May include backend validation errors:
+  // - "🔐 Password Required" (no password provided to backend)
+  // - "❌ Invalid Password" (wrong password)
+  // - Includes contact information for access
 });
 ```
+
+### Error Handling
+
+The widget handles backend password validation errors gracefully:
+
+**Invalid Password Response:**
+```
+❌ Invalid Password
+
+The password you provided is incorrect. Contact me for access.
+
+📧 Contact: richard.trujillo.torres@gmail.com
+💼 LinkedIn: https://www.linkedin.com/in/richard-trujillo-1572b0b7/
+```
+
+**Password Required Response:**
+```
+🔐 Password Required
+
+This API requires a demo password. Contact me to get access.
+
+📧 Contact: richard.trujillo.torres@gmail.com
+💼 LinkedIn: https://www.linkedin.com/in/richard-trujillo-1572b0b7/
+```
+
+These errors are displayed directly in the widget UI with clear instructions and contact information.
 
 ### Programmatic API
 
@@ -126,6 +196,9 @@ const analyzer = document.querySelector('insurai-analyzer');
 // Set policy text
 analyzer.policyText = "Your insurance policy text here...";
 
+// Set password programmatically
+analyzer.demoPassword = "your-password";
+
 // Trigger analysis
 await analyzer.analyze();
 
@@ -134,6 +207,9 @@ if (analyzer.result) {
   console.log('Coverage:', analyzer.result.coverage);
   console.log('Risk:', analyzer.result.riskLevel);
 }
+
+// Check remaining calls (real API mode)
+console.log('Calls remaining:', analyzer.demoCallsRemaining);
 ```
 
 ---
@@ -182,6 +258,7 @@ function App() {
   return (
     <insurai-analyzer
       api-url="https://your-api.com"
+      demo-password="your-password"
       theme="light"
       onAnalysis-complete={handleComplete}
     />
@@ -195,6 +272,7 @@ function App() {
 <template>
   <insurai-analyzer
     api-url="https://your-api.com"
+    demo-password="your-password"
     theme="light"
     @analysis-complete="handleComplete"
   />
@@ -220,6 +298,7 @@ import 'insurai-widget';
   template: `
     <insurai-analyzer
       [attr.api-url]="apiUrl"
+      [attr.demo-password]="demoPassword"
       theme="light"
       (analysis-complete)="handleComplete($event)"
     ></insurai-analyzer>
@@ -228,6 +307,7 @@ import 'insurai-widget';
 })
 export class AppComponent {
   apiUrl = 'https://your-api.com';
+  demoPassword = 'your-password';
   
   handleComplete(event: any) {
     console.log('Analysis:', event.detail);
