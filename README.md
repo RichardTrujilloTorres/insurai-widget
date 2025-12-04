@@ -243,7 +243,7 @@ export class AppComponent {
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR-USERNAME/insurai-widget.git
+git clone https://github.com/RichardTrujilloTorres/insurai-widget.git
 cd insurai-widget
 
 # Install dependencies
@@ -331,6 +331,6 @@ Built with:
 
 Built with ❤️ by [Richard Trujillo Torres](https://github.com/RichardTrujilloTorres)
 
-[Report Bug](https://github.com/YOUR-USERNAME/insurai-widget/issues) • [Request Feature](https://github.com/YOUR-USERNAME/insurai-widget/issues)
+[Report Bug](https://github.com/RichardTrujilloTorres/insurai-widget/issues) • [Request Feature](https://github.com/RichardTrujilloTorres/insurai-widget/issues)
 
 </div>
